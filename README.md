@@ -1,5 +1,5 @@
 [![godoc for benthosdev/benthos][godoc-badge]][godoc-url]
-![Coverage](https://img.shields.io/badge/Coverage-75.6%25-brightgreen)
+![Coverage](https://img.shields.io/badge/Coverage-91.5%25-brightgreen)
 [![Build Status][actions-badge]][actions-url]
 
 # ETL (extract, transform and load)
