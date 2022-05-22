@@ -1,6 +1,5 @@
 [![godoc for benthosdev/benthos][godoc-badge]][godoc-url]
 [![Build Status][actions-badge]][actions-url]
-[![Docs site][website-badge]][website-url]
 
 # ETL (extract, transform and load)
 
