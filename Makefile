@@ -30,6 +30,8 @@ run:
 cover:
 	go test -coverprofile=cover.out -coverpkg=./... -v ./...
 	go tool cover -html=cover.out -o cover.html
+	go test -v ./... -covermode=count -coverprofile=coverage.out
+	go tool cover -func=coverage.out -o=coverage.out
 
 .PHONY: gofmt
 gofmt:

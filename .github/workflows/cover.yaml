@@ -3,32 +3,54 @@ name: cover
 on: [push]
 
 jobs:
-  test:
+    test:
+        name: Upload coverage
 
-    name: Upload coverage
+        runs-on: ubuntu-latest
 
-    runs-on: ubuntu-latest
+        steps:
+            - name: Setup Go
+              uses: actions/setup-go@v2
+              with:
+                  go-version: ${{ matrix.go }}
 
-    steps:
-      - name: Setup Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{ matrix.go }}
+            - name: Checkout code
+              uses: actions/checkout@v2
 
-      - name: Checkout code
-        uses: actions/checkout@v2
+            - name: Load cached dependencies
+              uses: actions/cache@v2
+              with:
+                  path: ~/go/pkg/mod
+                  key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
 
-      - name: Load cached dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+            - name: Download dependencies
+              run: go mod download
 
-      - name: Download dependencies
-        run: go mod download
+            - name: Make coverage
+              run: make cover
 
-      - name: Make coverage
-        run: make cover
+            - name: Go Coverage Badge # Pass the `coverage.out` output to this action
+              uses: tj-actions/coverage-badge-go@v1.2
+              with:
+                  filename: coverage.out
 
-      # - name: Upload coverage to codecov.io
-      #   uses: codecov/codecov-action@v1
+            - name: Verify Changed files
+              uses: tj-actions/verify-changed-files@v9
+              id: verify-changed-files
+              with:
+                  files: README.md
+
+            - name: Commit changes
+              if: steps.verify-changed-files.outputs.files_changed == 'true'
+              run: |
+                  git config --local user.email "action@github.com"
+                  git config --local user.name "GitHub Action"
+                  git add README.md
+                  git commit -m "chore: Updated coverage badge."
+
+            - name: Push changes
+              if: steps.verify-changed-files.outputs.files_changed == 'true'
+              uses: ad-m/github-push-action@master
+              with:
+                  github_token: ${{ github.token }}
+                  branch: ${{ github.head_ref }}
