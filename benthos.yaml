@@ -1,0 +1,97 @@
+http:
+    enabled: true
+
+input:
+    label: "random_user"
+    http_client:
+        url: "https://random-data-api.com/api/users/random_user"
+        headers:
+            User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:100.0) Gecko/20100101 Firefox/100.0
+            Accept: application/json
+        tls:
+            enabled: true
+            skip_cert_verify: false
+        rate_limit: random
+rate_limit_resources:
+    - label: random
+      random:
+          count: 1
+          min_interval: 250ms
+          max_interval: 750ms
+
+buffer:
+    none: {}
+
+pipeline:
+    threads: 4
+    processors:
+        - label: transform
+          bloblang: |
+              root = {}
+              root.id = this.id
+              root.first_name = this.first_name
+              root.last_name = this.last_name
+              root.date_of_birth = this.date_of_birth
+              root.city = this.address.city
+              root.street_name = this.address.street_name
+              root.street_address = this.address.street_address
+              root.zip_code = this.address.zip_code
+              root.state = this.address.state
+              root.country = this.address.country
+              root.lat = this.address.coordinates.lat.number()
+              root.lng = this.address.coordinates.lng.number()
+
+output:
+    label: postgres
+    sql_raw:
+        driver: postgres
+        dsn: ${BENTHOS_DSN}
+        query: >
+            INSERT INTO random_user (id, first_name, last_name, date_of_birth, city, street_name, street_address, zip_code, state, country, lat, lng)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            ON CONFLICT(id) DO UPDATE SET
+              first_name=$2, last_name=$3, date_of_birth=$4, city=$5, street_name=$6, street_address=$7, zip_code=$8, state=$9, country=$10, lat=$11, lng=$12;
+        args_mapping: |
+            root = [
+              this.id,
+              this.first_name,
+              this.last_name,
+              this.date_of_birth,
+              this.city,
+              this.street_name,
+              this.street_address,
+              this.zip_code,
+              this.state,
+              this.country,
+              this.lat,
+              this.lng
+            ]
+        batching:
+            period: 1s
+
+logger:
+    level: INFO
+    format: logfmt
+    add_timestamp: true
+    static_fields:
+        "@service": benthos
+
+metrics:
+    prometheus:
+        use_histogram_timing: false
+        histogram_buckets: []
+        add_process_metrics: false
+        add_go_metrics: false
+        push_url: ""
+        push_interval: ""
+        push_job_name: benthos_push
+        push_basic_auth:
+            username: ""
+            password: ""
+        file_output_path: ""
+    mapping: ""
+
+tracer:
+    none: {}
+
+shutdown_timeout: 20s

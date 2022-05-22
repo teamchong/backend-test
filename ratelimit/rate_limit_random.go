@@ -1,0 +1,105 @@
+package ratelimit
+
+import (
+	"context"
+	"errors"
+	"math/rand"
+	"sync"
+	"time"
+
+	"github.com/benthosdev/benthos/v4/public/service"
+)
+
+func randomRatelimitConfig() *service.ConfigSpec {
+	spec := service.NewConfigSpec().
+		Summary(`The random rate limit is X every (Y1 - Y2)ms rate limit that can be shared across any number of components within the pipeline but does not support distributed rate limits across multiple running instances of Benthos.`).
+		Field(service.NewIntField("count").
+			Description("The maximum number of requests to allow for a given period of time.").
+			Default(1)).
+		Field(service.NewDurationField("min_interval").
+			Description("The min time window to limit requests by.").
+			Default("250ms")).
+		Field(service.NewDurationField("max_interval").
+			Description("The max time window to limit requests by.").
+			Default("750ms"))
+	return spec
+}
+
+func init() {
+	err := service.RegisterRateLimit(
+		"random", randomRatelimitConfig(),
+		func(conf *service.ParsedConfig, mgr *service.Resources) (service.RateLimit, error) {
+			return NewRandomRateLimitFromConfig(conf)
+		})
+	if err != nil {
+		panic(err)
+	}
+}
+
+func NewRandomRateLimitFromConfig(conf *service.ParsedConfig) (service.RateLimit, error) {
+	count, err := conf.FieldInt("count")
+	if err != nil {
+		return nil, err
+	}
+	minDuration, err := conf.FieldDuration("min_interval")
+	if err != nil {
+		return nil, err
+	}
+	maxDuration, err := conf.FieldDuration("max_interval")
+	if err != nil {
+		return nil, err
+	}
+	return NewRandomRateLimit(count, minDuration, maxDuration)
+}
+
+//------------------------------------------------------------------------------
+
+type RandomRateLimit struct {
+	mut         sync.Mutex
+	bucket      int
+	lastRefresh time.Time
+	size        int
+	period      time.Duration
+}
+
+func NewRandomRateLimit(count int, minInterval time.Duration, maxInterval time.Duration) (*RandomRateLimit, error) {
+	if count <= 0 {
+		return nil, errors.New("count must be larger than zero")
+	}
+	period := time.Duration(0)
+	if minInterval > period {
+		period = minInterval
+	}
+	if maxInterval > minInterval {
+		period += time.Duration(rand.Int() % (int(maxInterval) - int(minInterval)))
+	}
+	return &RandomRateLimit{
+		bucket:      count,
+		lastRefresh: time.Now(),
+		size:        count,
+		period:      period,
+	}, nil
+}
+
+func (r *RandomRateLimit) Access(context.Context) (time.Duration, error) {
+	r.mut.Lock()
+	r.bucket--
+
+	if r.bucket < 0 {
+		r.bucket = 0
+		remaining := r.period - time.Since(r.lastRefresh)
+
+		if remaining > 0 {
+			r.mut.Unlock()
+			return remaining, nil
+		}
+		r.bucket = r.size - 1
+		r.lastRefresh = time.Now()
+	}
+	r.mut.Unlock()
+	return 0, nil
+}
+
+func (r *RandomRateLimit) Close(ctx context.Context) error {
+	return nil
+}
