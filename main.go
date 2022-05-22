@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 
 	"github.com/benthosdev/benthos/v4/public/service"
 	"github.com/joho/godotenv"
@@ -15,9 +14,6 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	godotenv.Load()
 	service.RunCLI(context.Background())
 }
