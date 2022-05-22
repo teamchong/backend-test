@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const COUNT = 1
-const MIN_INTERVAL = time.Duration(250 * time.Millisecond)
-const MAX_INTERVAL = time.Duration(750 * time.Millisecond)
+const Count = 1
+const MinInterval = time.Duration(250 * time.Millisecond)
+const MaxInterval = time.Duration(750 * time.Millisecond)
 
 func TestRandomRatelimitConfErrors(t *testing.T) {
 	conf, err := randomRatelimitConfig().ParseYAML(`count: -1`, nil)
@@ -46,14 +46,14 @@ max_interval: 750ms
 
 	ctx := context.Background()
 
-	for i := 0; i < COUNT; i++ {
+	for i := 0; i < Count; i++ {
 		period, _ := rl.Access(ctx)
 		assert.LessOrEqual(t, period, time.Duration(0))
 	}
 
 	if period, _ := rl.Access(ctx); period == 0 {
 		t.Error("Expected limit on final request")
-	} else if period > MAX_INTERVAL {
+	} else if period > MaxInterval {
 		t.Errorf("Period beyond max_interval: %v", period)
 	}
 }
@@ -71,7 +71,7 @@ max_interval: 750ms
 
 	ctx := context.Background()
 
-	for i := 0; i < COUNT; i++ {
+	for i := 0; i < Count; i++ {
 		period, _ := rl.Access(ctx)
 		if period > 0 {
 			t.Errorf("Period above zero: %v", period)
@@ -80,13 +80,13 @@ max_interval: 750ms
 
 	if period, _ := rl.Access(ctx); period == 0 {
 		t.Error("Expected limit on final request")
-	} else if period > MAX_INTERVAL {
+	} else if period > MaxInterval {
 		t.Errorf("Period beyond max_interval: %v", period)
 	}
 
-	<-time.After(MAX_INTERVAL + 15*time.Millisecond)
+	<-time.After(MaxInterval + 15*time.Millisecond)
 
-	for i := 0; i < COUNT; i++ {
+	for i := 0; i < Count; i++ {
 		period, _ := rl.Access(ctx)
 		if period != 0 {
 			t.Errorf("Rate limited on get %v", period)
@@ -95,7 +95,7 @@ max_interval: 750ms
 
 	if period, _ := rl.Access(ctx); period == 0 {
 		t.Error("Expected limit on final request")
-	} else if period > MAX_INTERVAL {
+	} else if period > MaxInterval {
 		t.Errorf("Period beyond max_interval: %v", period)
 	}
 }

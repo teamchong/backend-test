@@ -36,6 +36,7 @@ func init() {
 	}
 }
 
+// NewRandomRateLimitFromConfig create RandomRateLimit from the provided ParsedConfig
 func NewRandomRateLimitFromConfig(conf *service.ParsedConfig) (service.RateLimit, error) {
 	count, err := conf.FieldInt("count")
 	if err != nil {
@@ -54,6 +55,7 @@ func NewRandomRateLimitFromConfig(conf *service.ParsedConfig) (service.RateLimit
 
 //------------------------------------------------------------------------------
 
+// RandomRateLimit store the state for this rate limiter
 type RandomRateLimit struct {
 	mut         sync.Mutex
 	bucket      int
@@ -62,6 +64,7 @@ type RandomRateLimit struct {
 	period      time.Duration
 }
 
+// NewRandomRateLimit return a new RandomRateLimit using the provided parameters
 func NewRandomRateLimit(count int, minInterval time.Duration, maxInterval time.Duration) (*RandomRateLimit, error) {
 	if count <= 0 {
 		return nil, errors.New("count must be larger than zero")
@@ -81,6 +84,7 @@ func NewRandomRateLimit(count int, minInterval time.Duration, maxInterval time.D
 	}, nil
 }
 
+// Access will return 0 when the limit is reached
 func (r *RandomRateLimit) Access(context.Context) (time.Duration, error) {
 	r.mut.Lock()
 	r.bucket--
@@ -100,6 +104,7 @@ func (r *RandomRateLimit) Access(context.Context) (time.Duration, error) {
 	return 0, nil
 }
 
+// Close will be called to cleanup
 func (r *RandomRateLimit) Close(ctx context.Context) error {
 	return nil
 }
