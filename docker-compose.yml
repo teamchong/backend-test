@@ -1,0 +1,14 @@
+services:
+    etl:
+        build: .
+        ports:
+            - 4195:4195
+        volumes:
+            - ${PWD}/benthos.yaml:/benthos.yaml
+        networks:
+            - backend
+        depends_on:
+            - db
+
+networks:
+    backend:
