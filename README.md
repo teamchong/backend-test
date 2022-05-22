@@ -132,8 +132,8 @@ output:
 
 [godoc-badge]: https://pkg.go.dev/badge/github.com/benthosdev/benthos/v4/public
 [godoc-url]: https://pkg.go.dev/github.com/benthosdev/benthos/v4/public
-[actions-badge]: https://github.com/teamchong/backend-test/actions/workflows/test.yml/badge.svg
-[actions-url]: https://github.com/teamchong/backend-test/actions/workflows/test.yml
+[actions-badge]: https://github.com/teamchong/backend-test/actions/workflows/test.yaml/badge.svg
+[actions-url]: https://github.com/teamchong/backend-test/actions/workflows/test.yaml
 [sources-link]: https://www.benthos.dev/docs/components/inputs/about
 [processors-link]: https://www.benthos.dev/docs/components/processors/about
 [sinks-link]: https://www.benthos.dev/docs/components/outputs/about
