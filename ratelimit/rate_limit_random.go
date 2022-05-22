@@ -2,7 +2,7 @@ package ratelimit
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"math/rand"
 	"sync"
 	"time"
@@ -41,14 +41,23 @@ func NewRandomRateLimitFromConfig(conf *service.ParsedConfig) (service.RateLimit
 	count, err := conf.FieldInt("count")
 	if err != nil {
 		return nil, err
+	} else if count <= 0 {
+		return nil, fmt.Errorf("value for count is invalid %v", count)
 	}
 	minDuration, err := conf.FieldDuration("min_interval")
 	if err != nil {
 		return nil, err
+	} else if minDuration < 0 {
+		return nil, fmt.Errorf("value for min_interval is invalid %v", minDuration)
 	}
 	maxDuration, err := conf.FieldDuration("max_interval")
 	if err != nil {
 		return nil, err
+	} else if maxDuration < 0 {
+		return nil, fmt.Errorf("value for max_interval is invalid %v", maxDuration)
+	}
+	if minDuration > maxDuration {
+		return nil, fmt.Errorf("value for max_interval %v should be larger than min_interval %v", maxDuration, minDuration)
 	}
 	return NewRandomRateLimit(count, minDuration, maxDuration)
 }
@@ -67,7 +76,7 @@ type RandomRateLimit struct {
 // NewRandomRateLimit return a new RandomRateLimit using the provided parameters
 func NewRandomRateLimit(count int, minInterval time.Duration, maxInterval time.Duration) (*RandomRateLimit, error) {
 	if count <= 0 {
-		return nil, errors.New("count must be larger than zero")
+		count = 1
 	}
 	period := time.Duration(0)
 	if minInterval > period {

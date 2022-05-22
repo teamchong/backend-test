@@ -1,10 +1,7 @@
 package main
 
 import (
-	"context"
 	"testing"
-
-	"github.com/benthosdev/benthos/v4/public/service"
 
 	// Import all standard Benthos components
 	_ "github.com/benthosdev/benthos/v4/public/components/all"
@@ -18,5 +15,5 @@ import (
 // within the Benthos configuration.
 func TestMain(t *testing.T) {
 	// And then execute Benthos with:
-	service.RunCLI(context.Background())
+	main()
 }

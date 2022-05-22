@@ -28,9 +28,9 @@ run:
 
 .PHONY: cover
 cover:
-	go test -coverprofile=cover.out -coverpkg=./... -v ./...
-	go tool cover -html=cover.out -o cover.html
-	go test -v ./... -covermode=count -coverprofile=coverage.out
+	go test -v ./... -coverprofile=coverage.out -coverpkg=./...
+	go tool cover -html=coverage.out -o coverage.html
+	go test -v ./... -coverprofile=coverage.out -covermode=count
 	go tool cover -func=coverage.out -o=coverage.out
 
 .PHONY: gofmt

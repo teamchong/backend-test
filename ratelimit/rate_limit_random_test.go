@@ -20,13 +20,32 @@ func TestRandomRatelimitConfErrors(t *testing.T) {
 	_, err = NewRandomRateLimitFromConfig(conf)
 	require.Error(t, err)
 
-	_, err = randomRatelimitConfig().ParseYAML(`min_interval: nope`, nil)
+	conf, err = randomRatelimitConfig().ParseYAML(`min_interval: nope`, nil)
 	require.NoError(t, err)
 
 	_, err = NewRandomRateLimitFromConfig(conf)
 	require.Error(t, err)
 
-	_, err = randomRatelimitConfig().ParseYAML(`max_interval: nope`, nil)
+	conf, err = randomRatelimitConfig().ParseYAML(`min_interval: -1s`, nil)
+	require.NoError(t, err)
+
+	_, err = NewRandomRateLimitFromConfig(conf)
+	require.Error(t, err)
+
+	conf, err = randomRatelimitConfig().ParseYAML(`max_interval: nope`, nil)
+	require.NoError(t, err)
+
+	_, err = NewRandomRateLimitFromConfig(conf)
+	require.Error(t, err)
+
+	conf, err = randomRatelimitConfig().ParseYAML(`max_interval: -1s`, nil)
+	require.NoError(t, err)
+
+	_, err = NewRandomRateLimitFromConfig(conf)
+	require.Error(t, err)
+
+	conf, err = randomRatelimitConfig().ParseYAML(`min_interval: 750ms
+max_interval: 250ms`, nil)
 	require.NoError(t, err)
 
 	_, err = NewRandomRateLimitFromConfig(conf)
@@ -56,6 +75,8 @@ max_interval: 750ms
 	} else if period > MaxInterval {
 		t.Errorf("Period beyond max_interval: %v", period)
 	}
+
+	rl.Close(ctx)
 }
 
 func TestRandomRatelimitRefresh(t *testing.T) {
@@ -98,4 +119,6 @@ max_interval: 750ms
 	} else if period > MaxInterval {
 		t.Errorf("Period beyond max_interval: %v", period)
 	}
+
+	rl.Close(ctx)
 }
